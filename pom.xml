@@ -3,46 +3,61 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.frauddectection</groupId>
+  <groupId>com.frauddetection</groupId>
   <artifactId>fraud-detection-service</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>fraud-detection-service</name>
   <description>Fraud Detection Service</description>
+
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.2.1</version> <!-- 根据需要选择合适的版本 -->
-    <relativePath/> <!-- lookup parent from repository -->
+    <version>3.2.1</version>
+    <relativePath/>
   </parent>
+
   <properties>
     <java.version>17</java.version>
   </properties>
+
   <dependencies>
+    <!-- Web Starter -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    <!-- Spring Boot Starter Test (包含JUnit, MockMvc等工具) -->
+
+    <!-- Data JPA Starter -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
+
+    <!-- H2 Database -->
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>2.0.9</version> <!-- 可根据需要选择合适的版本 -->
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>runtime</scope>
     </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.4.11</version> <!-- 可根据需要选择合适的版本 -->
-    </dependency>
+
     <!-- GCP Pub/Sub -->
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-pubsub</artifactId>
       <version>1.120.15</version>
+    </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.mockito</groupId>
+          <artifactId>mockito-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -51,12 +66,14 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <repositories>
     <repository>
       <id>google-maven-central</id>
       <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
     </repository>
   </repositories>
+
   <build>
     <plugins>
       <plugin>
