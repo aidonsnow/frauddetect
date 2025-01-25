@@ -38,7 +38,20 @@
       <artifactId>logback-classic</artifactId>
       <version>1.4.11</version> <!-- 可根据需要选择合适的版本 -->
     </dependency>
+    <!-- GCP Pub/Sub -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-pubsub</artifactId>
+      <version>1.120.15</version>
+    </dependency>
+
   </dependencies>
+  <repositories>
+    <repository>
+      <id>google-maven-central</id>
+      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+    </repository>
+  </repositories>
   <build>
     <plugins>
       <plugin>

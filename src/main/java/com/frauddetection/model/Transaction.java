@@ -1,13 +1,13 @@
 package com.frauddetection.model;
 
+import java.math.BigDecimal;
+
 public class Transaction {
     private String transactionId;
     private String accountId;
-    private double amount;
-    private String timestamp;
+    private BigDecimal amount;
 
     // Getters and Setters
-
     public String getTransactionId() {
         return transactionId;
     }
@@ -24,19 +24,11 @@ public class Transaction {
         this.accountId = accountId;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(String timestamp) {
-        this.timestamp = timestamp;
     }
 }

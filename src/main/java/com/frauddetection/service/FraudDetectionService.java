@@ -3,14 +3,17 @@ package com.frauddetection.service;
 import com.frauddetection.model.Transaction;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class FraudDetectionService {
 
-    // 简单的规则：交易金额超过1000为欺诈
+    // 检测交易是否存在欺诈
     public boolean detectFraud(Transaction transaction) {
-        if (transaction.getAmount() > 1000) {
-            return true; // 假设金额超过1000是欺诈
+        if (transaction.getAmount() == null) {
+            return false;
         }
-        return false;
+        // 简单规则：如果交易金额大于 10000，则标记为欺诈
+        return transaction.getAmount().compareTo(new BigDecimal("10000")) > 0;
     }
 }
