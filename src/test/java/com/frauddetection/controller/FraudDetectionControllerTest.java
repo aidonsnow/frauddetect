@@ -1,41 +1,43 @@
 package com.frauddetection.controller;
 
 import com.frauddetection.model.Transaction;
-import com.frauddetection.service.RuleLoaderService;
-import com.frauddetection.mq.MQService;
+import com.frauddetection.service.AlertService;
+import com.frauddetection.service.FraudDetectionService;
+import com.frauddetection.rules.ThresholdRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class FraudDetectionControllerTest {
 
     private FraudDetectionController fraudDetectionController;
+    private AlertService mockAlertService;
 
     @BeforeEach
     void setUp() {
-        // 模拟 RuleLoaderService
-        RuleLoaderService mockRuleLoaderService = Mockito.mock(RuleLoaderService.class);
+        // 初始化规则列表
+        FraudDetectionService fraudDetectionService = new FraudDetectionService(
+                List.of(new ThresholdRule(new BigDecimal("10000")))
+        );
 
-        // 模拟 MQService
-        MQService mockMqService = Mockito.mock(MQService.class);
+        // 模拟 AlertService
+        mockAlertService = Mockito.mock(AlertService.class);
 
-        // 初始化 FraudDetectionController
-        fraudDetectionController = new FraudDetectionController(mockRuleLoaderService, mockMqService);
+        fraudDetectionController = new FraudDetectionController(fraudDetectionService, mockAlertService);
     }
 
     @Test
     void testCheckFraud() {
-        // 构造交易数据
         Transaction transaction = new Transaction();
         transaction.setTransactionId("12345");
-        transaction.setAmount(new java.math.BigDecimal("1000"));
+        transaction.setAmount(new BigDecimal("15000"));
 
-        // 调用控制器方法
         String result = fraudDetectionController.checkFraud(transaction);
-
-        // 验证返回结果
-        assertEquals("Transaction is Legitimate", result);
+        assertEquals("Fraudulent Transaction Detected by Rule: ThresholdRule", result);
     }
 }

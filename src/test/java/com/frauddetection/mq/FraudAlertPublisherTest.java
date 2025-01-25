@@ -1,28 +1,49 @@
 package com.frauddetection.mq;
 
 import com.frauddetection.model.Transaction;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.pubsub.v1.Publisher;
+import com.google.protobuf.ByteString;
+import com.google.pubsub.v1.ProjectTopicName;
+import com.google.pubsub.v1.PubsubMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.math.BigDecimal;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.*;
 
 class FraudAlertPublisherTest {
 
     private FraudAlertPublisher fraudAlertPublisher;
+    private final String base64EncodedKey = "ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAic3BoZXJpYy1lbmdpbmUtNDQ4OTA2LW0zIiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiM2FhNzg0OWM5Nzg4ZjU2MGRlMjM4MmVhNTVlZGZmNDY5ZjEwNzI4OSIsCiAgInByaXZhdGVfa2V5IjogIi0tLS0tQkVHSU4gUFJJVkFURSBLRVktLS0tLVxuTUlJRXZRSUJBREFOQmdrcWhraUc5dzBCQVFFRkFBU0NCS2N3Z2dTakFnRUFBb0lCQVFDNWNBZGNvNVBDeCtRRVxuMDZFazNVL3JZYVNHM2NGeWJQN3NKL2hVSElsM2F0Slp2ZGlrZXNGWS9WTHc2SExQQVVVOXNtMjFyV0J0RFBYUFxuL0dEWktmeHJUQ0RMaXA0ZGFsTkdDanhTc2NWZ0tnbnR5VnNoR0NUZUFnYXdWUEMxOU5zYmRVREllZnFwSVBTY1xuNGw0RUl1VVlldHc4Y1VFVnVubWNNMy8vdmRCcUFFZjZuQmxNNHBpc243YlV4QjNac3F5SDZEd2dyNlpLSzN4Q1xuWEE0YTVqQkpaclZ1NDJ4VmR2WDJ4VG9Bd1VvbCtQdDhTRTJZTHpCWEZ4ZzJKNXRiVW5BWWhqUXM5ZlNLOC9LbVxuRGgvaGFBeUxjSngzQ0lZYVZReWFGZVdWQVNCcWkvVlFrbXFOQWhzVHF2aXBoQ3V1YzI5MnE4a0pTUHFRbmNoelxuTGxuNFJTNDFBZ01CQUFFQ2dnRUFHK25DSWU2NWlrTmVqbDl3elVUSEIrNXR2cU5Zd0NtcUFkQk9jQkxQbW5zb1xuNkx0TUJnNDRWblhqYTBJQ0xpakp6R3kwV1BtZEh5MHBQMEtGTFl0RlpMMVQzbStpTjFsTzZhY1d4M2ZjOXdtOFxuN3Q4MWFYamg2ODB3UnBDeW55RVpianVySWNKQ3VmeXM5WVNabEZQUVdtdjhCTmtqYStyaTdXRlBMaWJiWFdrbFxuam55SWl2ZWFhY2VLdEJtOTlnZmZoS3krMndvTDBCMEc2Y3R0NWxNVlloSkV2MlNLY0oyWDJZaGxtbmIwK085TVxueDVJeUp3YVprR3pXTThoeEczcWt6eFpUcFk1OHRwVkd0Mit2WWs1ZHFQKzBjNjdqRGVObHFZZHJXSTQrc3A1UlxudnpEMytDWWM2SWd3SnUzM3BsRWlYRmN0R3RXWlpqUEMwUThUaTlLbVlRS0JnUUR1c2kwZk9JZUFDeS82ZVZyNVxuN3Z6ajNPS0lPZzFxdmNuaUpyTkdPdFV6a1FJclhyL0tmTkw5UkFQOHZOSE1ScXZsWmQweUhGVHVNdlFTYXpFQVxuL2xwMEVOdjhnVzFibXgrZU9BTCtxUk1lMUd4dWplZ0VkRHdaYlpIaWVxUnJyYUdzNVd4SnJQTUNRSzFralR5YVxuenFoZUgvUk5RdThIVWZXTy93VElSODQ1alFLQmdRREc0WFhUdGtHVHdVZFlNcldDc1g1eGllQjU2Rkt5M1NTUVxuN1I4WW81bysvay9ja1dQcVg1VFVrbmRhN2lFU1NQYTdJcEJUeWs2TmJDTjVOQ3pYamx2TzFObkQ3MEt1SXUwR1xuMklpQUh1R0hRT2dxei8rT2JCWTErTklNU2tCSXFJc3cvNE9zMlNkdjJFZ3JBakpGaUhNMVVjeFdCRTF2b1R6L1xuUngySjFEZ1pTUUtCZ0U1WXIxVExFamFsOVdhS1JLRTZuMGtQYkU5NGRvVHRySUVOWU5TUlpQOWEvbEpMOURtN1xuUk9tYVZKQzFUVXQyZXQ5OTB0K3F5dm13UWNwMTRvekg3OXFlMmdZRVdXZXkvK3JIeWJ2YXRRcnVnSFM5SVVXc1xuL1RqL2JOM2drVzFDZlltcGVDU3Fuc3pEZStaQU1YOUNpNkx4YkJlYis2YjBjTnd4dWxrZXNJTFZBb0dBSU1ZbVxuMUt6RVFjVW9MTEN1bU1zSE8wNnRYMm1adDBBYU5vZmRDQUp0K05PUDlabEFEZStTWnpWNzFkQklRdXNqUGRPRVxuVlVxUmgxeTZ1ODZOVlRod2lMVXE3YzhQL2dKamJTMWgwVHRGanpSekRoc1kwaStkdVdjM3RpN0dTVEw5UFNYZVxuWFMyc0FoSnlVaVFhaExybndYR3Bhc05xdjJxaTBxNjFmM0VwallFQ2dZRUF6d0pyV0ZveFQ5eE5sdnI1MHRXSVxuUkltdzVIMnJzMWZEQXd5YjNBM2dKV2xuVUNlb2llWlBlTHNGZ2FUUitzN2UxcWVsNXhYZjJqQThMVWp0T2FJSlxuc0xXL0lxdHV6SGxzSHFWTmhRcFp0akJWK3gxdnowbklCSXdpVXJHVG5hc3Fha3JhQ1JYcExjNzg0bW03ZWNZalxuVTBxN3YrWDBGT0NHN04xeEJaZnFoLzA9XG4tLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tXG4iLAogICJjbGllbnRfZW1haWwiOiAiZnJhdWRkZXRlY3Rpb25kZW1vQHNwaGVyaWMtZW5naW5lLTQ0ODkwNi1tMy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgImNsaWVudF9pZCI6ICIxMTAxMzk2MTc1OTQ0OTUzMDM2NTIiLAogICJhdXRoX3VyaSI6ICJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvYXV0aCIsCiAgInRva2VuX3VyaSI6ICJodHRwczovL29hdXRoMi5nb29nbGVhcGlzLmNvbS90b2tlbiIsCiAgImF1dGhfcHJvdmlkZXJfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9vYXV0aDIvdjEvY2VydHMiLAogICJjbGllbnRfeDUwOV9jZXJ0X3VybCI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9yb2JvdC92MS9tZXRhZGF0YS94NTA5L2ZyYXVkZGV0ZWN0aW9uZGVtbyU0MHNwaGVyaWMtZW5naW5lLTQ0ODkwNi1tMy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgInVuaXZlcnNlX2RvbWFpbiI6ICJnb29nbGVhcGlzLmNvbSIKfQo="; // 替换为实际的 base64 字符串
 
     @BeforeEach
-    void setUp() {
-        fraudAlertPublisher = new FraudAlertPublisher();
+    void setUp() throws Exception {
+        // 解码 Base64 编码的密钥
+        byte[] decodedKey = Base64.getDecoder().decode(base64EncodedKey);
+        GoogleCredentials googleCredentials = GoogleCredentials.fromStream(new java.io.ByteArrayInputStream(decodedKey));
+
+        // 初始化 FraudAlertPublisher
+        fraudAlertPublisher = new FraudAlertPublisher(googleCredentials);
+
+        // 设置测试环境所需的 Spring @Value 注入字段
+        ReflectionTestUtils.setField(fraudAlertPublisher, "projectId", "spheric-engine-448906-m3"); // 替换为实际 GCP 项目 ID
+        ReflectionTestUtils.setField(fraudAlertPublisher, "alertTopicId", "FraudAlerts"); // 替换为实际主题名称
     }
 
     @Test
     void testPublishMessage() {
+        // 创建测试用的交易数据
         Transaction transaction = new Transaction();
         transaction.setTransactionId("12345");
+        transaction.setAccountId("67890");
+        transaction.setAmount(new BigDecimal("15000"));
 
-        // 调用 publishMessage 并验证不会抛出异常
+        // 验证发布不会抛出异常
         assertDoesNotThrow(() -> fraudAlertPublisher.publishMessage(transaction));
+        System.out.println("Test for publishMessage passed.");
     }
 }

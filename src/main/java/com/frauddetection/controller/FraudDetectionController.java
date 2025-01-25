@@ -1,28 +1,28 @@
 package com.frauddetection.controller;
 
 import com.frauddetection.model.Transaction;
-import com.frauddetection.rules.Rule;
+import com.frauddetection.service.AlertService;
 import com.frauddetection.service.FraudDetectionService;
-import com.frauddetection.service.RuleLoaderService;
-import com.frauddetection.mq.MQService;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/fraud")
 public class FraudDetectionController {
 
     private final FraudDetectionService fraudDetectionService;
+    private final AlertService alertService;
 
-    public FraudDetectionController(RuleLoaderService ruleLoaderService, @Qualifier("fraudAlertPublisher") MQService mqService) {
-        List<Rule> rules = ruleLoaderService.loadRules();
-        this.fraudDetectionService = new FraudDetectionService(rules, mqService);
+    public FraudDetectionController(FraudDetectionService fraudDetectionService, AlertService alertService) {
+        this.fraudDetectionService = fraudDetectionService;
+        this.alertService = alertService;
     }
 
     @PostMapping("/check")
     public String checkFraud(@RequestBody Transaction transaction) {
-        return fraudDetectionService.detectFraud(transaction);
+        String result = fraudDetectionService.detectFraud(transaction);
+        if (result.startsWith("Fraudulent")) {
+            alertService.sendAlert(transaction, result);
+        }
+        return result;
     }
 }

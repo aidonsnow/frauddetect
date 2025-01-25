@@ -1,6 +1,7 @@
 package com.frauddetection.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.pubsub.v1.Publisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +18,9 @@ class GCPPubSubConfigTest {
 
     @Test
     void testGoogleCredentials() throws IOException {
+        // 测试 GoogleCredentials 是否正确加载
         GoogleCredentials credentials = gcpPubSubConfig.googleCredentials();
-        assertNotNull(credentials);
+        assertNotNull(credentials, "GoogleCredentials should not be null");
     }
+
 }
