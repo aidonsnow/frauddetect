@@ -1,23 +1,12 @@
 package com.frauddetection.model;
 
-import java.io.Serializable;
-
-public class Transaction implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
+public class Transaction {
     private String transactionId;
-    private double amount;
     private String accountId;
+    private double amount;
+    private String timestamp;
 
-    public Transaction() {
-    }
-
-    public Transaction(String transactionId, double amount, String accountId) {
-        this.transactionId = transactionId;
-        this.amount = amount;
-        this.accountId = accountId;
-    }
+    // Getters and Setters
 
     public String getTransactionId() {
         return transactionId;
@@ -25,6 +14,14 @@ public class Transaction implements Serializable {
 
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public double getAmount() {
@@ -35,11 +32,11 @@ public class Transaction implements Serializable {
         this.amount = amount;
     }
 
-    public String getAccountId() {
-        return accountId;
+    public String getTimestamp() {
+        return timestamp;
     }
 
-    public void setAccountId(String accountId) {
-        this.accountId = accountId;
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 }
