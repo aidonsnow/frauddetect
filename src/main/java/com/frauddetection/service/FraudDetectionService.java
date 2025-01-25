@@ -1,19 +1,21 @@
 package com.frauddetection.service;
 
 import com.frauddetection.model.Transaction;
+import com.frauddetection.rules.Rule;
+import com.frauddetection.rules.RuleEngine;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class FraudDetectionService {
+    private final RuleEngine ruleEngine = new RuleEngine();
 
-    // 检测交易是否存在欺诈
-    public boolean detectFraud(Transaction transaction) {
-        if (transaction.getAmount() == null) {
-            return false;
-        }
-        // 简单规则：如果交易金额大于 10000，则标记为欺诈
-        return transaction.getAmount().compareTo(new BigDecimal("10000")) > 0;
+    public FraudDetectionService(List<Rule> rules) {
+        rules.forEach(ruleEngine::registerRule);
+    }
+
+    public String processTransaction(Transaction transaction) {
+        return ruleEngine.executeRules(transaction); // 返回匹配的规则名称
     }
 }
