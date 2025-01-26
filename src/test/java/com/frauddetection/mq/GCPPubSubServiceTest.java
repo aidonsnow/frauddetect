@@ -1,7 +1,6 @@
 package com.frauddetection.mq;
 
 import com.frauddetection.model.Transaction;
-import com.google.auth.oauth2.GoogleCredentials;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,12 +17,14 @@ class GCPPubSubServiceTest {
 
     @Test
     void testPublishMessage() {
+        // 创建测试用的交易数据
         Transaction transaction = new Transaction();
         transaction.setTransactionId("txn123");
         transaction.setAccountId("acc456");
         transaction.setAmount(BigDecimal.valueOf(15000));
 
         // 验证发布不会抛出异常
-        assertDoesNotThrow(() -> gcpPubSubService.publishMessage(transaction));
+        assertDoesNotThrow(() -> gcpPubSubService.publish("FraudDetection", transaction.getTransactionId()));
+        System.out.println("Test for publishMessage passed.");
     }
 }

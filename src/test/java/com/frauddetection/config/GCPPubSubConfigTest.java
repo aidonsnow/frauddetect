@@ -12,15 +12,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 class GCPPubSubConfigTest {
-
     @Autowired
     private GCPPubSubConfig gcpPubSubConfig;
 
     @Test
     void testGoogleCredentials() throws IOException {
-        // 测试 GoogleCredentials 是否正确加载
         GoogleCredentials credentials = gcpPubSubConfig.googleCredentials();
         assertNotNull(credentials, "GoogleCredentials should not be null");
     }
-
 }

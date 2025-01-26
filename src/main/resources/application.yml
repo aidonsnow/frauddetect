@@ -34,6 +34,9 @@ pubsub:
     maxAckExtensionPeriod: 60                 # 最大消息确认延长时间（秒）
     maxOutstandingElementCount: 1000          # 最大未确认的消息数量
     maxOutstandingRequestBytes: 10000000      # 最大未确认的消息字节数
+mq:
+  type: GCP
+
 
 # 注意事项
 # 1. 建议不要在配置文件中直接存储敏感信息（例如 service-account-key-base64）。可以通过环境变量注入，

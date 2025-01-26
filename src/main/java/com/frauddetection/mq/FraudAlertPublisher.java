@@ -11,8 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Fraud alert publisher using GCP Pub/Sub.
+ */
 @Service("fraudAlertPublisher")
-public class FraudAlertPublisher implements MQService {
+public class FraudAlertPublisher implements MQPublisher {
 
     @Value("${gcp.project-id}")
     private String projectId;
@@ -26,30 +29,32 @@ public class FraudAlertPublisher implements MQService {
         this.googleCredentials = googleCredentials;
     }
 
+    /**
+     * Publishes a fraud alert message to the GCP Pub/Sub topic.
+     *
+     * @param topic   the topic to publish to
+     * @param message the message to publish
+     */
     @Override
-    public void publishMessage(Transaction transaction) {
+    public void publish(String topic, String message) {
         try {
-            // 构建 GCP Pub/Sub 的主题名称
-            ProjectTopicName topicName = ProjectTopicName.of(projectId, alertTopicId);
+            ProjectTopicName topicName = ProjectTopicName.of(projectId, topic);
 
-            // 初始化 Publisher
+            // Initialize Publisher with GoogleCredentials
             Publisher publisher = Publisher.newBuilder(topicName)
                     .setCredentialsProvider(() -> googleCredentials)
                     .build();
 
-            // 构建 Pub/Sub 消息
-            ByteString data = ByteString.copyFromUtf8(transaction.getTransactionId());
-            PubsubMessage message = PubsubMessage.newBuilder()
+            ByteString data = ByteString.copyFrom(message.getBytes());
+            PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(data)
-                    .putAttributes("accountId", transaction.getAccountId())
-                    .putAttributes("amount", transaction.getAmount().toString())
                     .build();
 
-            // 发布消息
-            String messageId = publisher.publish(message).get();
-            System.out.println("Published message with ID: " + messageId);
+            // Publish the message
+            String messageId = publisher.publish(pubsubMessage).get();
+            System.out.println("Published message to topic " + topic + " with ID: " + messageId);
 
-            // 关闭 Publisher
+            // Shutdown Publisher to release resources
             publisher.shutdown();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Failed to publish message: " + e.getMessage(), e);
@@ -58,8 +63,37 @@ public class FraudAlertPublisher implements MQService {
         }
     }
 
-    @Override
-    public void subscribeMessage() {
-        // 留空，订阅逻辑可在监听器中实现
+    /**
+     * Publishes a fraud alert with transaction details.
+     *
+     * @param transaction the transaction to publish
+     */
+    public void publishTransaction(Transaction transaction) {
+        try {
+            ProjectTopicName topicName = ProjectTopicName.of(projectId, alertTopicId);
+
+            // Initialize Publisher with GoogleCredentials
+            Publisher publisher = Publisher.newBuilder(topicName)
+                    .setCredentialsProvider(() -> googleCredentials)
+                    .build();
+
+            ByteString data = ByteString.copyFromUtf8(transaction.getTransactionId());
+            PubsubMessage message = PubsubMessage.newBuilder()
+                    .setData(data)
+                    .putAttributes("accountId", transaction.getAccountId())
+                    .putAttributes("amount", transaction.getAmount().toString())
+                    .build();
+
+            // Publish the transaction details
+            String messageId = publisher.publish(message).get();
+            System.out.println("Published transaction message with ID: " + messageId);
+
+            // Shutdown Publisher to release resources
+            publisher.shutdown();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException("Failed to publish transaction: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize Publisher: " + e.getMessage(), e);
+        }
     }
 }

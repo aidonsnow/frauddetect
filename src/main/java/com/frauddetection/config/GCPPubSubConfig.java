@@ -23,15 +23,34 @@ public class GCPPubSubConfig {
      * 配置 GoogleCredentials，用于 GCP 服务认证
      *
      * @return GoogleCredentials 实例
-     * @throws IOException 如果加载凭据失败
+     * @throws RuntimeException 如果加载凭据失败
      */
     @Bean
-    public GoogleCredentials googleCredentials() throws IOException {
-        // 解码 Base64 内容并加载为 GoogleCredentials
-        byte[] decodedKey = Base64.getDecoder().decode(serviceAccountKeyBase64);
-        return GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey));
+    public GoogleCredentials googleCredentials() {
+        try {
+            // 解码 Base64 内容并加载为 GoogleCredentials
+            byte[] decodedKey = Base64.getDecoder().decode(serviceAccountKeyBase64);
+            return GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey));
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid Base64 encoded key for Google service account.", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load GoogleCredentials from provided key.", e);
+        }
     }
 
-
-
+    /**
+     * 示例：配置 Pub/Sub Publisher（如果需要单例 Publisher 实例）
+     *
+     * @return Publisher 实例
+     */
+    @Bean
+    public Publisher alertPublisher(GoogleCredentials googleCredentials) {
+        try {
+            return Publisher.newBuilder(alertTopicId)
+                    .setCredentialsProvider(() -> googleCredentials)
+                    .build();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to initialize Pub/Sub Publisher for alertTopicId: " + alertTopicId, e);
+        }
+    }
 }
