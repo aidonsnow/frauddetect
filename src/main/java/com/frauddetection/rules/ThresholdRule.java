@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 
 public class ThresholdRule implements Rule {
     private final BigDecimal threshold;
+    private int priority = 0; // 默认优先级
 
     public ThresholdRule(BigDecimal threshold) {
         this.threshold = threshold;
@@ -13,7 +14,7 @@ public class ThresholdRule implements Rule {
 
     @Override
     public boolean matches(Transaction transaction) {
-        return transaction.getAmount() != null && transaction.getAmount().compareTo(threshold) > 0;
+        return transaction.getAmount().compareTo(threshold) > 0;
     }
 
     @Override
@@ -23,6 +24,10 @@ public class ThresholdRule implements Rule {
 
     @Override
     public int getPriority() {
-        return 1;
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
     }
 }

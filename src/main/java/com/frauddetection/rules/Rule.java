@@ -6,4 +6,5 @@ public interface Rule {
     boolean matches(Transaction transaction); // 判断是否匹配规则
     String getName();                        // 获取规则名称
     int getPriority();                       // 获取规则优先级
+    void setPriority(int priority); // 添加动态优先级设置方法
 }
