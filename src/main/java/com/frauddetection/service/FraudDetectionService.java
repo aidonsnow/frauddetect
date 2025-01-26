@@ -1,24 +1,24 @@
 package com.frauddetection.service;
 
-import com.frauddetection.rules.Rule;
+import com.frauddetection.model.Transaction;
+import com.frauddetection.rules.RuleEngine;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class FraudDetectionService {
+    private final RuleEngine ruleEngine;
 
-    private final List<Rule> rules;
-
-    public FraudDetectionService(List<Rule> rules) {
-        this.rules = rules;
+    public FraudDetectionService(RuleLoaderService ruleLoaderService) {
+        this.ruleEngine = ruleLoaderService.getRuleEngine();
     }
 
-    public String detectFraud(com.frauddetection.model.Transaction transaction) {
-        for (Rule rule : rules) {
-            if (rule.matches(transaction)) {
-                return "Fraudulent Transaction Detected by Rule: " + rule.getName();
-            }
+    public String detectFraud(Transaction transaction) {
+       /* if (ruleEngine.getRules().isEmpty()) {
+            return "empty rules";
+        }*/
+        String result = ruleEngine.executeRules(transaction);
+        if (result != null) {
+            return "Fraudulent Transaction Detected by Rule: " + result;
         }
         return "Transaction is Legitimate";
     }

@@ -12,6 +12,7 @@ public class FraudDetectionController {
     private final FraudDetectionService fraudDetectionService;
     private final AlertService alertService;
 
+
     public FraudDetectionController(FraudDetectionService fraudDetectionService, AlertService alertService) {
         this.fraudDetectionService = fraudDetectionService;
         this.alertService = alertService;
