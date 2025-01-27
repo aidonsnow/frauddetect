@@ -65,6 +65,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-logging</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- 使用 SLF4J 默认绑定 -->
@@ -73,11 +79,33 @@
       <artifactId>slf4j-api</artifactId>
       <version>2.1.0-alpha1</version>
     </dependency>
+    <!-- Jackson 库 -->
+    <!-- Jackson 数据绑定 -->
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <version>2.1.0-alpha1</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.18.2</version>
     </dependency>
+    <!-- Jackson 核心依赖 -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.18.2</version>  <!-- 确保版本一致 -->
+    </dependency>
+
+    <!-- Jackson 注解 -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.18.2</version>  <!-- 确保版本一致 -->
+    </dependency>
+
+    <!-- Spring Boot JSON Starter -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-json</artifactId>
+    </dependency>
+
 
 
   </dependencies>
