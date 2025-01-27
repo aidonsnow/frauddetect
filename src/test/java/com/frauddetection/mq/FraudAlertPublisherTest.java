@@ -9,7 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.util.Base64;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
@@ -18,8 +19,8 @@ class FraudAlertPublisherTest {
 
     private FraudAlertPublisher fraudAlertPublisher;
 
-    @Value("${gcp.service-account-key-base64}")
-    private String base64EncodedKey;
+    @Value("${gcp.service-account-key-path}")
+    private String serviceAccountKeyPath;  // 使用文件路径而不是 Base64 字符串
 
     @Value("${gcp.project-id}")
     private String projectId;
@@ -29,9 +30,13 @@ class FraudAlertPublisherTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        // 从配置文件中解码 Base64 编码的密钥
-        byte[] decodedKey = Base64.getDecoder().decode(base64EncodedKey);
-        GoogleCredentials googleCredentials = GoogleCredentials.fromStream(new java.io.ByteArrayInputStream(decodedKey));
+        // 使用文件路径加载服务账号密钥
+        GoogleCredentials googleCredentials;
+        try {
+            googleCredentials = GoogleCredentials.fromStream(new FileInputStream(serviceAccountKeyPath));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load service account key from file: " + serviceAccountKeyPath, e);
+        }
 
         // 初始化 FraudAlertPublisher
         fraudAlertPublisher = new FraudAlertPublisher(googleCredentials);
