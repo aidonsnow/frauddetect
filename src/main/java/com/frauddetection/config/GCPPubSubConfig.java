@@ -6,15 +6,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Base64;
 
 @Configuration
 public class GCPPubSubConfig {
 
-    @Value("${gcp.service-account-key-base64}")
-    private String serviceAccountKeyBase64;
+    @Value("${gcp.service-account-key-path}")
+    private String serviceAccountKeyPath;
 
     @Value("${gcp.pubsub.alert-topic-id}")
     private String alertTopicId;
@@ -28,13 +27,10 @@ public class GCPPubSubConfig {
     @Bean
     public GoogleCredentials googleCredentials() {
         try {
-            // 解码 Base64 内容并加载为 GoogleCredentials
-            byte[] decodedKey = Base64.getDecoder().decode(serviceAccountKeyBase64);
-            return GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey));
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid Base64 encoded key for Google service account.", e);
+            // 使用文件路径加载 GoogleCredentials
+            return GoogleCredentials.fromStream(new FileInputStream(serviceAccountKeyPath));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load GoogleCredentials from provided key.", e);
+            throw new RuntimeException("Failed to load GoogleCredentials from the provided service account key file.", e);
         }
     }
 
