@@ -1,81 +1,197 @@
-### **README: Fraud Detection Service**
 
 ---
 
-### **Disclaimer**
-以下是从使用 Maven 构建 JAR 文件到使用 Docker 构建并运行容器的完整流程说明。
-本项目在 temurin-19.jdk 验证通过
+# **欺诈检测服务介绍**
 
----
+## 1. 准备环境
 
-### **完整流程**
-
-#### **1. 确保环境准备好**
+### 环境要求
 - **工具**：
-    - 安装 Maven（验证：`mvn -v`）。
-    - 安装 Docker（验证：`docker -v`）。
+    - Docker（验证：`docker -v`）
+    - Kubernetes（kubectl 工具，验证：`kubectl version`）
+    - Google Cloud CLI（`gcloud`，验证：`gcloud version`）
+    - Java 19（验证：`java -version`）
 
-- **项目结构**：
-    - 项目中包含 `pom.xml` 文件。
-    - 应用的主类已正确配置在 `pom.xml` 的 `spring-boot-maven-plugin` 中。
-
----
-
-#### **2. 使用 Maven 构建项目**
-1. 运行以下命令，在项目根目录下构建项目：
-   ```bash
-   mvn clean package -DskipTests
-   ```
-    - **`clean`**：清理上一次的构建结果。
-    - **`package`**：打包项目，生成 `target/*.jar` 文件。
-    - **`-DskipTests`**：跳过单元测试，缩短构建时间。
+- **必要信息**：
+    - GCP 项目 ID（例如：`spheric-engine-448906-m3`）
+    - Artifact Registry 仓库位置与名称
+    - Kubernetes 集群已配置并可访问
 
 ---
 
-#### **3. 构建 Docker 镜像**
-1. 运行以下命令构建 Docker 镜像：
-   ```bash
-   docker build -t fraud-detection:latest .
-   ```
-2. 验证镜像是否构建成功：
-   ```bash
-   docker images
-   ```
-   确认输出中是否包含镜像名称 `fraud-detection:latest`。
+## 2. 构建 Docker 镜像
+
+### **2.1 使用 Maven 构建 JAR 文件**
+进入项目目录，执行以下命令：
+```bash
+mvn clean package -DskipTests
+```
+此命令会在 `target/` 目录下生成 `fraud-detection-*.jar` 文件。
+
+### **2.2 构建 Docker 镜像**
+执行以下命令构建 Docker 镜像：
+```bash
+docker build -t fraud-detection:latest .
+```
+
+### **2.3 验证 Docker 镜像**
+验证镜像是否构建成功：
+```bash
+docker images
+```
+您应该看到名为 `fraud-detection` 的镜像，版本为 `latest`。
+
+运行容器进行验证：
+```bash
+docker run -d -p 8080:8080 fraud-detection:latest
+```
+然后可以通过访问 `http://localhost:8080` 来检查容器是否正常运行。
+
+### **2.4 测试交易接口**
+验证镜像中的应用是否正常工作，您可以使用 `curl` 发送测试交易请求：
+
+```bash
+curl -X POST http://localhost:8080/fraud/check \
+-H "Content-Type: application/json" \
+-d '{
+  "transactionId": "txn123",
+  "accountId": "acc123",
+  "amount": 15000
+}'
+```
+
+如果服务正常，您应该能得到类似如下的响应：
+
+- **成功响应**：
+  ```json
+  {
+    "transactionId": "txn123",
+    "status": "OK",
+    "fraudulent": false
+  }
+  ```
+
+- **失败响应**：
+  如果请求失败，检查 Docker 容器日志：
+  ```bash
+  docker logs <container-id>
+  ```
+至此已经在本地完全验证完毕。
 
 ---
 
-#### **4. 运行 Docker 容器**
-1. 使用以下命令运行容器，将服务暴露在本地 `8080` 端口：
-   ```bash
-   docker run -p 8080:8080 fraud-detection:latest
-   ```
+## 3. 推送镜像到 GCP Artifact Registry
+
+### **3.1 配置 Artifact Registry**
+使用以下命令启用 Artifact Registry API：
+```bash
+gcloud services enable artifactregistry.googleapis.com
+```
+
+### **3.2 创建 Artifact Registry 仓库**
+```bash
+gcloud artifacts repositories create frauddetectiondemo \
+    --repository-format=docker \
+    --location=northamerica-northeast1 \
+    --description="Fraud Detection Demo Repository"
+```
+
+### **3.3 配置 Docker 登录**
+```bash
+gcloud auth configure-docker northamerica-northeast1-docker.pkg.dev
+```
+
+### **3.4 标记并推送镜像**
+将镜像标记为 Artifact Registry 路径：
+```bash
+docker tag fraud-detection:latest northamerica-northeast1-docker.pkg.dev/spheric-engine-448906-m3/frauddetectiondemo/fraud-detection:latest
+```
+
+推送镜像：
+```bash
+docker push northamerica-northeast1-docker.pkg.dev/spheric-engine-448906-m3/frauddetectiondemo/fraud-detection:latest
+```
 
 ---
 
-#### **5. 测试服务是否正常**
-1. 使用 `curl` 测试服务的 POST 接口：
-   ```bash
-   curl -X POST http://localhost:8080/fraud/check \
-        -H "Content-Type: application/json" \
-        -d '{"transactionId":"txn123", "accountId":"acc123", "amount":15000}'
-   ```
-    - **请求数据**：
-      ```json
-      {
-        "transactionId": "txn123",
-        "accountId": "acc123",
-        "amount": 15000
-      }
-      ```
+## 4. 部署到 Kubernetes
 
-2. 验证服务是否返回预期响应。
+### **4.1 创建 Secret 以存储服务账户密钥**
+使用以下命令将本地服务账户密钥创建为 Kubernetes Secret：
+```bash
+kubectl create secret generic google-credentials \
+    --from-file=./spheric-engine-448906-m3-3aa7849c9788.json
+```
+
+### **4.2 部署到 Kubernetes**
+应用配置文件：
+```bash
+kubectl apply -f k8s/deployment.yaml
+```
 
 ---
 
-### **总结**
-1. 确保环境准备和项目结构完整。
-2. 使用 Maven 构建 JAR 文件。
-3. 使用 Docker 构建并运行镜像。
-4. 通过 `curl` 或其他工具测试服务接口。
+## 5. 验证部署
 
+### **5.1 检查 Pods 是否运行成功**
+运行以下命令查看 Pods 状态：
+```bash
+kubectl get pods
+```
+
+确保 Pods 状态为 `Running`。
+
+### **5.2 获取服务的外部 IP**
+使用以下命令获取服务的外部 IP 地址：
+```bash
+kubectl get services
+```
+输出示例：
+```
+NAME                      TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)        AGE
+fraud-detection-service   LoadBalancer   34.118.233.124   34.42.43.84     80:30934/TCP   10m
+```
+
+在此示例中，服务的外部 IP 是 `34.42.43.84`。
+
+---
+
+## 6. 测试服务
+
+### **6.1 使用 `curl` 测试交易接口**
+发送测试交易：
+```bash
+curl -X POST http://34.42.43.84/fraud/check \
+-H "Content-Type: application/json" \
+-d '{
+  "transactionId": "txn123",
+  "accountId": "acc123",
+  "amount": 15000
+}'
+```
+
+### **6.2 验证响应**
+- **成功响应**：
+  ```json
+  {
+    "transactionId": "txn123",
+    "status": "OK",
+    "fraudulent": false
+  }
+  ```
+- **失败响应**：
+  如果请求失败，请检查：
+    1. 服务日志：`kubectl logs -l app=fraud-detection`
+    2. 服务配置（特别是 GCP 凭证）。
+
+---
+
+## 7. 清理资源（可选）
+如果不再需要部署，可以清理 Kubernetes 资源：
+```bash
+kubectl delete -f k8s/deployment.yaml
+```
+
+---
+
+通过此文档，您可以从 Docker 镜像构建到 Kubernetes 部署，再到服务验证完成整个流程。如有问题，请随时反馈！
