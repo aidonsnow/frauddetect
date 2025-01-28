@@ -4,6 +4,7 @@
 
 ### **Disclaimer**
 以下是从使用 Maven 构建 JAR 文件到使用 Docker 构建并运行容器的完整流程说明。
+本项目在 temurin-19.jdk 验证通过
 
 ---
 
