@@ -6,7 +6,7 @@ REGION="northamerica-northeast1"
 REPOSITORY="frauddetectiondemo"
 IMAGE_NAME="frauddetection"
 IMAGE_TAG="latest"
-
+#northamerica-northeast1-docker.pkg.dev/spheric-engine-448906-m3/frauddetectiondemo/frauddetection:latest
 # 构建完整的镜像路径
 IMAGE_PATH="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE_NAME:$IMAGE_TAG"
 

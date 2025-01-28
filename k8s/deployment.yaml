@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fraud-detection-deployment
+  name: fraud-detection
   labels:
     app: fraud-detection
 spec:
-  replicas: 3  # 设置 Pod 的副本数
+  replicas: 3
   selector:
     matchLabels:
       app: fraud-detection
@@ -16,16 +16,23 @@ spec:
     spec:
       containers:
         - name: fraud-detection
-          image: northamerica-northeast1-docker.pkg.dev/spheric-engine-448906-m3/frauddetectiondemo:latest  # 填写你推送到容器仓库的镜像
+          image: northamerica-northeast1-docker.pkg.dev/spheric-engine-448906-m3/frauddetectiondemo/frauddetection:latest
           ports:
             - containerPort: 8080
-          resources:
-            requests:
-              memory: "512Mi"
-              cpu: "500m"
-            limits:
-              memory: "1024Mi"
-              cpu: "1000m"
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: "prod"  # 假设 Spring 配置的生产环境
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /app/credentials/service-account-key.json
+          volumeMounts:
+            - name: credentials-volume
+              mountPath: /app/credentials/service-account-key.json
+              subPath: service-account-key.json
+            - name: config-volume
+              mountPath: /app/config/application.yml
+              subPath: application.yml
+      volumes:
+        - name: credentials-volume
+          secret:
+            secretName: google-credentials
+        - name: config-volume
+          configMap:
+            name: fraud-detection-config

@@ -9,7 +9,7 @@ spring:
 # Google Cloud Platform (GCP) 配置
 gcp:
   project-id: spheric-engine-448906-m3          # GCP 项目 ID
-  service-account-key-path: "/Users/zengxiangzong/IdeaProjects/GoogleKeys/spheric-engine-448906-m3-3aa7849c9788.json"
+  service-account-key-path:  ${GOOGLE_APPLICATION_CREDENTIALS}
   pubsub:
     topic-id: FraudDetection                   # Pub/Sub 主题 ID# 用于交易处理的主题
     subscription-id: FraudDetection-sub        # Pub/Sub 订阅 ID
