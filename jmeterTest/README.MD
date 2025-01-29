@@ -1,1 +1,0 @@
-./jmeter -n -t SimulatingSustainedHighLoad.jmx -l /Users/zengxiangzong/IdeaProjects/SimulatingSustainedHighLoad/result.jtl -e -o /Users/zengxiangzong/IdeaProjects/SimulatingSustainedHighLoad

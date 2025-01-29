@@ -5,7 +5,7 @@ metadata:
   labels:
     app: fraud-detection
 spec:
-  replicas: 3
+  replicas: 3  # 设置副本数为3
   selector:
     matchLabels:
       app: fraud-detection
@@ -29,6 +29,13 @@ spec:
             - name: config-volume
               mountPath: /app/config/application.yml
               subPath: application.yml
+          resources:  # 设置适当的资源请求和限制
+            requests:
+              cpu: 100m   # 每个 Pod 请求500m CPU (即 0.5 vCPU)
+              memory: 256Mi  # 每个 Pod 请求 1Gi 内存
+            limits:
+              cpu: 500m      # 每个 Pod 最大使用1 vCPU
+              memory: 1Gi  # 每个 Pod 最大使用 2Gi 内存
       volumes:
         - name: credentials-volume
           secret:
@@ -36,3 +43,7 @@ spec:
         - name: config-volume
           configMap:
             name: fraud-detection-config
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 25%  # 允许最大25%的Pod不可用
+      maxSurge: 25%        # 允许最大25%的Pod扩展
